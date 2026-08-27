@@ -3,6 +3,7 @@
 #include <glib.h>
 #include <glibconfig.h>
 #include <obs-frontend-api.h>
+#include <obs-module.h>
 #include <strings.h>
 #include <util/base.h>
 #include <util/bmem.h>
@@ -200,17 +201,17 @@ bool shortcuts_load() {
   shortcut_t binds[] = {
       {
           .id = "toggleStreaming",
-          .description = "toggle the streaming state",
+          .description = obs_module_text("BindToggleStreaming"),
           .exec = bind_toggle_streaming,
       },
       {
           .id = "toggleRecording",
-          .description = "toggle the recording state",
+          .description = obs_module_text("BindToggleRecording"),
           .exec = bind_toggle_recording,
       },
       {
           .id = "playPauseRecording",
-          .description = "pause/play the current recording",
+          .description = obs_module_text("BindPlayPauseRecording"),
           .exec = bind_play_pause_recording,
       },
       SHORTCUT_NULL,
