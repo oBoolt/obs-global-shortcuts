@@ -17,7 +17,7 @@
 
 typedef struct shortcuts_call {
   char *sender;
-  char *request_handle;
+  char *session_token;
   char *session_handle;
   guint signal_response_id;
   guint signal_shortcuts_id;

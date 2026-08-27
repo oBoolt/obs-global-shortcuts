@@ -83,20 +83,57 @@ static bool shortcuts_register_app() {
   return true;
 }
 
+static void shortcuts_call_init() {
+  call = bzalloc(sizeof(shortcuts_call_t));
+  call->sender = get_sender();
+
+  struct dstr str;
+  dstr_init(&str);
+  dstr_printf(&str, "gs%u", g_random_int());
+  call->session_token = bstrdup(str.array);
+  dstr_free(&str);
+}
+
+static void shortcuts_get_request_handle(char **path, char **token) {
+  guint32 t = g_random_int();
+
+  if (path != NULL) {
+    struct dstr str;
+    dstr_init(&str);
+    dstr_printf(&str, "%s/%s/gs%u", REQUEST_PREFIX, call->sender, t);
+    *path = bstrdup(str.array);
+    dstr_free(&str);
+  }
+
+  if (token != NULL) {
+    struct dstr str;
+    dstr_init(&str);
+    dstr_printf(&str, "gs%u", t);
+    *token = bstrdup(str.array);
+    dstr_free(&str);
+  }
+}
+
 static bool shortcuts_create_session() {
   g_autoptr(GError) error = NULL;
   g_autoptr(GVariant) ret = NULL;
 
+  char *token;
+  shortcuts_get_request_handle(NULL, &token);
+
   GVariantBuilder opts;
   g_variant_builder_init(&opts, G_VARIANT_TYPE_VARDICT);
   g_variant_builder_add(&opts, "{sv}", "handle_token",
-                        g_variant_new_string("a"));
+                        g_variant_new_string(token));
   g_variant_builder_add(&opts, "{sv}", "session_handle_token",
-                        g_variant_new_string("b"));
+                        g_variant_new_string(call->session_token));
 
   ret = g_dbus_proxy_call_sync(proxy, "CreateSession",
                                g_variant_new("(a{sv})", &opts),
                                G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+
+  bfree(token);
+
   if (error != NULL) {
     g_assert(ret == NULL);
     blog(LOG_WARNING, "[%s] failed to create GlobalShortcuts session: %s",
@@ -126,36 +163,11 @@ static void shortcuts_signal_binds_callback(
        interface_name, signal_name, g_variant_print(parameters, FALSE));
 }
 
-static void shortcuts_call_init() {
-  call = bzalloc(sizeof(shortcuts_call_t));
-  call->sender = get_sender();
-
-  {
-    struct dstr str;
-    dstr_init(&str);
-    dstr_printf(&str, "%s/%s/global_shortcuts_%u", REQUEST_PREFIX, call->sender,
-                g_random_int());
-    call->request_handle = bstrdup(str.array);
-    dstr_free(&str);
-  }
-
-  {
-    struct dstr str;
-    dstr_init(&str);
-    dstr_printf(&str, "%s/%s/global_shortcuts_%u", REQUEST_PREFIX, call->sender,
-                g_random_int());
-    call->session_handle = bstrdup(str.array);
-    dstr_free(&str);
-  }
-
-  // TODO: remove this debug line
-  blog(LOG_DEBUG, "[%s] %s | %s", PROJECT_PREFIX, call->request_handle,
-       call->session_handle);
-
+static void shortcuts_signals_subscribe() {
   call->signal_response_id = g_dbus_connection_signal_subscribe(
-      connection, BUS_NAME, REQUEST_INTERFACE, "Response", call->request_handle,
-      NULL, G_DBUS_SIGNAL_FLAGS_NO_MATCH_RULE,
-      shortcuts_signal_response_callback, NULL, NULL);
+      connection, BUS_NAME, REQUEST_INTERFACE, "Response", NULL, NULL,
+      G_DBUS_SIGNAL_FLAGS_NO_MATCH_RULE, shortcuts_signal_response_callback,
+      NULL, NULL);
 
   call->signal_shortcuts_id = g_dbus_connection_signal_subscribe(
       connection, BUS_NAME, GLOBAL_SHORTCUTS_INTERFACE, NULL, OBJECT_PATH, NULL,
@@ -163,6 +175,56 @@ static void shortcuts_call_init() {
       NULL);
 
   return;
+}
+
+// TODO: accept Shortcut array
+static bool shortcuts_bind() {
+  g_autoptr(GError) error = NULL;
+  g_autoptr(GVariant) ret = NULL;
+
+  GVariantBuilder shortcuts;
+  g_variant_builder_init(&shortcuts, G_VARIANT_TYPE("a(sa{sv})"));
+
+  // TODO: with shortcut array add each one
+  {
+    GVariantBuilder bind;
+    g_variant_builder_init(&bind, G_VARIANT_TYPE_VARDICT);
+    g_variant_builder_add(&bind, "{sv}", "description",
+                          g_variant_new_string("test description"));
+
+    g_variant_builder_add(&shortcuts, "(sa{sv})", "foo", &bind);
+  }
+
+  char *token;
+  shortcuts_get_request_handle(NULL, &token);
+
+  GVariantBuilder opts;
+  g_variant_builder_init(&opts, G_VARIANT_TYPE_VARDICT);
+  g_variant_builder_add(&opts, "{sv}", "handle_token",
+                        g_variant_new_string(token));
+
+  struct dstr session_handle;
+  dstr_init(&session_handle);
+  dstr_printf(&session_handle, "%s/%s/%s", SESSION_PREFIX, call->sender,
+              call->session_token);
+
+  ret = g_dbus_proxy_call_sync(proxy, "BindShortcuts",
+                               g_variant_new("(oa(sa{sv})sa{sv})",
+                                             session_handle.array, &shortcuts,
+                                             "", &opts),
+                               G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+
+  bfree(token);
+  dstr_free(&session_handle);
+
+  if (error != NULL) {
+    g_assert(ret == NULL);
+    blog(LOG_WARNING, "[%s] failed to bind shortcuts: %s", PROJECT_PREFIX,
+         error->message);
+    return false;
+  }
+
+  return true;
 }
 
 bool shortcuts_load() {
@@ -175,10 +237,14 @@ bool shortcuts_load() {
   if (!shortcuts_register_app())
     return false;
 
+  shortcuts_call_init();
+
   if (!shortcuts_create_session())
     return false;
 
-  shortcuts_call_init();
+  shortcuts_signals_subscribe();
+
+  shortcuts_bind();
 
   return true;
 }
@@ -186,7 +252,7 @@ bool shortcuts_load() {
 void shortcuts_unload() {
 
   bfree(call->sender);
-  bfree(call->request_handle);
+  bfree(call->session_token);
   bfree(call->session_handle);
 
   g_dbus_connection_signal_unsubscribe(connection, call->signal_response_id);
