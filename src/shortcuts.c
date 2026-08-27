@@ -199,6 +199,11 @@ bool shortcuts_load() {
 
   shortcut_t binds[] = {
       {
+          .id = "toggleStreaming",
+          .description = "toggle the streaming state",
+          .exec = bind_toggle_streaming,
+      },
+      {
           .id = "toggleRecording",
           .description = "toggle the recording state",
           .exec = bind_toggle_recording,
