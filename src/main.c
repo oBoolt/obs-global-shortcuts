@@ -6,12 +6,10 @@
 #include "shortcuts.h"
 
 OBS_DECLARE_MODULE()
-OBS_MODULE_USE_DEFAULT_LOCALE("xdg-global-shortcuts", "en-US")
+OBS_MODULE_USE_DEFAULT_LOCALE("global-shortcuts-portal", "en-US")
 
-const char *obs_module_name() { return "XDG Global Shortcuts"; }
-const char *obs_module_description() {
-  return "Register Hotkeys as a XDG Global Shortcut";
-}
+const char *obs_module_name() { return "GlobalShortcuts Portal"; }
+const char *obs_module_description() { return obs_module_text("Description"); }
 
 bool obs_module_load(void) {
   if (!portal_load()) {

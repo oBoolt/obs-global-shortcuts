@@ -9,8 +9,8 @@ typedef void exec_t(void);
 
 #define SHORTCUT_NULL {NULL, NULL, NULL}
 typedef struct shortcut {
-  gchar *id;
-  gchar *description;
+  char *id;
+  const char *description;
   exec_t *exec;
 } shortcut_t;
 
