@@ -2,6 +2,7 @@
 #include <glib-object.h>
 #include <obs-module.h>
 
+#include "portal.h"
 #include "shortcuts.h"
 
 OBS_DECLARE_MODULE()
@@ -13,13 +14,23 @@ const char *obs_module_description() {
 }
 
 bool obs_module_load(void) {
-  bool result = shortcuts_load();
+  if (!portal_load()) {
+    portal_unload();
 
-  if (!result) {
-    shortcuts_unload();
+    return false;
   }
 
-  return result;
+  if (!shortcuts_load()) {
+    shortcuts_unload();
+    portal_unload();
+
+    return false;
+  }
+
+  return true;
 }
 
-void obs_module_unload(void) { shortcuts_unload(); }
+void obs_module_unload(void) {
+  shortcuts_unload();
+  portal_unload();
+}

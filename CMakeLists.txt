@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(project_SOURCES
     src/main.c
+    src/portal.c
     src/shortcuts.c)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE
