@@ -2,15 +2,18 @@
 #include <glib-object.h>
 #include <glib.h>
 #include <glibconfig.h>
+#include <obs-frontend-api.h>
 #include <strings.h>
 #include <util/base.h>
 #include <util/bmem.h>
 #include <util/dstr.h>
 
+#include "binds.h"
 #include "portal.h"
 #include "shortcuts.h"
 
 static GDBusProxy *proxy = NULL;
+static GHashTable *shortcuts_functions = NULL;
 
 typedef struct shortcuts_call {
   char *session_token;
@@ -74,15 +77,6 @@ static void shortcuts_call_init() {
   portal_handle_new(NULL, &call->session_token);
 }
 
-static void shortcuts_signal_binds_callback(
-    GDBusConnection *connection, const gchar *sender_name,
-    const gchar *object_path, const gchar *interface_name,
-    const gchar *signal_name, GVariant *parameters, gpointer user_data) {
-
-  blog(LOG_DEBUG, "[%s] (SIGNAL{%s::%s}) : %s\n", PROJECT_PREFIX,
-       interface_name, signal_name, g_variant_print(parameters, FALSE));
-}
-
 static bool shortcuts_create_session() {
   g_autoptr(GError) error = NULL;
   g_autoptr(GVariant) ret = NULL;
@@ -115,35 +109,42 @@ static bool shortcuts_create_session() {
 
   blog(LOG_DEBUG, "[%s] GlobalShortcuts session created", PROJECT_PREFIX);
 
-  char *session_handle =
-      portal_handle_get_path(SESSION_PREFIX, call->session_token);
-
-  call->signal_shortcuts_id = g_dbus_connection_signal_subscribe(
-      connection, BUS_NAME, GLOBAL_SHORTCUTS_INTERFACE, NULL, OBJECT_PATH,
-      session_handle, G_DBUS_SIGNAL_FLAGS_MATCH_ARG0_PATH,
-      shortcuts_signal_binds_callback, NULL, NULL);
-
-  bfree(session_handle);
-
   return true;
 }
 
-// TODO: accept Shortcut array
-static bool shortcuts_bind() {
+static void shortcuts_signal_binds_callback(
+    GDBusConnection *connection, const gchar *sender_name,
+    const gchar *object_path, const gchar *interface_name,
+    const gchar *signal_name, GVariant *parameters, gpointer user_data) {
+
+  char *id;
+  g_variant_get(parameters, "(osta{sv})", NULL, &id, NULL, NULL);
+  exec_t *exec = g_hash_table_lookup(shortcuts_functions, id);
+  if (exec != NULL)
+    exec();
+
+  g_free(id);
+}
+
+static bool shortcuts_bind(shortcut_t *binds) {
   g_autoptr(GError) error = NULL;
   g_autoptr(GVariant) ret = NULL;
+
+  GDBusConnection *connection = get_connection();
+  g_return_val_if_fail(connection != NULL, false);
 
   GVariantBuilder shortcuts;
   g_variant_builder_init(&shortcuts, G_VARIANT_TYPE("a(sa{sv})"));
 
-  // TODO: with shortcut array add each one
-  {
+  for (int i = 0; binds[i].id != NULL; i++) {
     GVariantBuilder bind;
     g_variant_builder_init(&bind, G_VARIANT_TYPE_VARDICT);
     g_variant_builder_add(&bind, "{sv}", "description",
-                          g_variant_new_string("test description"));
+                          g_variant_new_string(binds[i].description));
 
-    g_variant_builder_add(&shortcuts, "(sa{sv})", "foo", &bind);
+    g_hash_table_insert(shortcuts_functions, binds[i].id, binds[i].exec);
+
+    g_variant_builder_add(&shortcuts, "(sa{sv})", binds[i].id, &bind);
   }
 
   char *token;
@@ -164,7 +165,6 @@ static bool shortcuts_bind() {
                              G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
   bfree(token);
-  bfree(session_handle);
 
   if (error != NULL) {
     g_assert(ret == NULL);
@@ -172,6 +172,13 @@ static bool shortcuts_bind() {
          error->message);
     return false;
   }
+
+  call->signal_shortcuts_id = g_dbus_connection_signal_subscribe(
+      connection, BUS_NAME, GLOBAL_SHORTCUTS_INTERFACE, "Activated",
+      OBJECT_PATH, session_handle, G_DBUS_SIGNAL_FLAGS_MATCH_ARG0_PATH,
+      shortcuts_signal_binds_callback, NULL, NULL);
+
+  bfree(session_handle);
 
   return true;
 }
@@ -188,7 +195,23 @@ bool shortcuts_load() {
   if (!shortcuts_create_session())
     return false;
 
-  shortcuts_bind();
+  shortcuts_functions = g_hash_table_new(g_str_hash, g_str_equal);
+
+  shortcut_t binds[] = {
+      {
+          .id = "toggleRecording",
+          .description = "toggle the recording state",
+          .exec = bind_toggle_recording,
+      },
+      {
+          .id = "playPauseRecording",
+          .description = "pause/play the current recording",
+          .exec = bind_play_pause_recording,
+      },
+      SHORTCUT_NULL,
+  };
+
+  shortcuts_bind(&binds[0]);
 
   return true;
 }
@@ -220,6 +243,7 @@ void shortcuts_unload() {
                                        call->signal_shortcuts_id);
 
   g_object_unref(proxy);
+  g_hash_table_unref(shortcuts_functions);
   bfree(call);
   return;
 }

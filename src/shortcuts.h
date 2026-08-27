@@ -5,10 +5,13 @@
 
 #define GLOBAL_SHORTCUTS_INTERFACE "org.freedesktop.portal.GlobalShortcuts"
 
-#define SHORTCUT_NULL {NULL, NULL}
+typedef void exec_t(void);
+
+#define SHORTCUT_NULL {NULL, NULL, NULL}
 typedef struct shortcut {
-  const gchar *id;
-  const gchar *description;
+  gchar *id;
+  gchar *description;
+  exec_t *exec;
 } shortcut_t;
 
 bool shortcuts_load(void);
