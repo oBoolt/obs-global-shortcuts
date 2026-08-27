@@ -1,4 +1,8 @@
+#include <gio/gio.h>
+#include <glib-object.h>
 #include <obs-module.h>
+
+#include "shortcuts.h"
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE("xdg-global-shortcuts", "en-US")
@@ -9,6 +13,8 @@ const char *obs_module_description() {
 }
 
 bool obs_module_load(void) {
-  blog(LOG_INFO, "Hello world! from xdg-global-shortcuts");
-  return true;
+  bool result = shortcuts_load();
+  return result;
 }
+
+void obs_module_unload(void) { shortcuts_unload(); }

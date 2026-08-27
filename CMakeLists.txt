@@ -1,14 +1,24 @@
 cmake_minimum_required(VERSION 4.4.2)
 project(xdg-global-shortcuts)
 
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
 set(project_SOURCES
-    src/main.c)
+    src/main.c
+    src/shortcuts.c)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE
     ${project_SOURCES})
 
 find_package(libobs REQUIRED)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs)
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0)
+
+target_link_libraries(${CMAKE_PROJECT_NAME}
+    PRIVATE OBS::libobs
+    PRIVATE PkgConfig::GIO)
 
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES PREFIX "")
 
