@@ -78,6 +78,7 @@ static void shortcuts_signal_binds_callback(
     GDBusConnection *connection, const gchar *sender_name,
     const gchar *object_path, const gchar *interface_name,
     const gchar *signal_name, GVariant *parameters, gpointer user_data) {
+
   blog(LOG_DEBUG, "[%s] (SIGNAL{%s::%s}) : %s\n", PROJECT_PREFIX,
        interface_name, signal_name, g_variant_print(parameters, FALSE));
 }
@@ -114,10 +115,15 @@ static bool shortcuts_create_session() {
 
   blog(LOG_DEBUG, "[%s] GlobalShortcuts session created", PROJECT_PREFIX);
 
+  char *session_handle =
+      portal_handle_get_path(SESSION_PREFIX, call->session_token);
+
   call->signal_shortcuts_id = g_dbus_connection_signal_subscribe(
-      connection, BUS_NAME, GLOBAL_SHORTCUTS_INTERFACE, NULL, OBJECT_PATH, NULL,
-      G_DBUS_SIGNAL_FLAGS_NO_MATCH_RULE, shortcuts_signal_binds_callback, NULL,
-      NULL);
+      connection, BUS_NAME, GLOBAL_SHORTCUTS_INTERFACE, NULL, OBJECT_PATH,
+      session_handle, G_DBUS_SIGNAL_FLAGS_MATCH_ARG0_PATH,
+      shortcuts_signal_binds_callback, NULL, NULL);
+
+  bfree(session_handle);
 
   return true;
 }
@@ -150,7 +156,6 @@ static bool shortcuts_bind() {
 
   char *session_handle =
       portal_handle_get_path(SESSION_PREFIX, call->session_token);
-  blog(LOG_DEBUG, "[%s] %s", PROJECT_PREFIX, session_handle);
 
   ret =
       g_dbus_proxy_call_sync(proxy, "BindShortcuts",
