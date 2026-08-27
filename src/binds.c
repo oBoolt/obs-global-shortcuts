@@ -18,5 +18,9 @@ void bind_toggle_recording() {
   blog(LOG_DEBUG, "[%s] recording state changed", PROJECT_PREFIX);
 }
 void bind_play_pause_recording() {
+  if (!obs_frontend_recording_active())
+    return;
+
+  obs_frontend_recording_pause(!obs_frontend_recording_paused());
   blog(LOG_DEBUG, "[%s] play/pause recording", PROJECT_PREFIX);
 }
