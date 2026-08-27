@@ -13,13 +13,15 @@ add_library(${CMAKE_PROJECT_NAME} MODULE
     ${project_SOURCES})
 
 find_package(libobs REQUIRED)
+find_package(obs-frontend-api REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
-    PRIVATE OBS::libobs
-    PRIVATE PkgConfig::GIO)
+    OBS::libobs
+    OBS::obs-frontend-api
+    PkgConfig::GIO)
 
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES PREFIX "")
 
