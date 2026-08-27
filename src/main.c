@@ -14,6 +14,11 @@ const char *obs_module_description() {
 
 bool obs_module_load(void) {
   bool result = shortcuts_load();
+
+  if (!result) {
+    shortcuts_unload();
+  }
+
   return result;
 }
 
