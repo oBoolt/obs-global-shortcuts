@@ -88,7 +88,8 @@ static bool shortcuts_create_session() {
   g_return_val_if_fail(connection != NULL, false);
 
   char *token;
-  portal_handle_new(NULL, &token);
+  char *handle;
+  portal_handle_new(&handle, &token);
 
   GVariantBuilder opts;
   g_variant_builder_init(&opts, G_VARIANT_TYPE_VARDICT);
@@ -97,11 +98,19 @@ static bool shortcuts_create_session() {
   g_variant_builder_add(&opts, "{sv}", "session_handle_token",
                         g_variant_new_string(call->session_token));
 
-  ret = g_dbus_proxy_call_sync(proxy, "CreateSession",
+  request_call_t *req = bzalloc(sizeof(request_call_t));
+  req->message = bstrdup("GlobalShortcuts session created");
+  req->method = bstrdup("CreateSession");
+  req->signal_id = g_dbus_connection_signal_subscribe(
+      connection, BUS_NAME, REQUEST_INTERFACE, "Response", handle, NULL,
+      G_DBUS_SIGNAL_FLAGS_NONE, portal_request_callback, req, bfree);
+
+  ret = g_dbus_proxy_call_sync(proxy, req->method,
                                g_variant_new("(a{sv})", &opts),
                                G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
   bfree(token);
+  bfree(handle);
 
   if (error != NULL) {
     g_assert(ret == NULL);
@@ -109,9 +118,7 @@ static bool shortcuts_create_session() {
          PROJECT_PREFIX, error->message);
     return false;
   }
-
   call->has_session = true;
-  blog(LOG_DEBUG, "[%s] GlobalShortcuts session created", PROJECT_PREFIX);
 
   return true;
 }
@@ -152,7 +159,8 @@ static bool shortcuts_bind(shortcut_t *binds) {
   }
 
   char *token;
-  portal_handle_new(NULL, &token);
+  char *handle;
+  portal_handle_new(&handle, &token);
 
   GVariantBuilder opts;
   g_variant_builder_init(&opts, G_VARIANT_TYPE_VARDICT);
@@ -162,13 +170,21 @@ static bool shortcuts_bind(shortcut_t *binds) {
   char *session_handle =
       portal_handle_get_path(SESSION_PREFIX, call->session_token);
 
+  request_call_t *req = bzalloc(sizeof(request_call_t));
+  req->message = bstrdup("shortcuts binded successfully");
+  req->method = bstrdup("BindShortcuts");
+  req->signal_id = g_dbus_connection_signal_subscribe(
+      connection, BUS_NAME, REQUEST_INTERFACE, "Response", handle, NULL,
+      G_DBUS_SIGNAL_FLAGS_NONE, portal_request_callback, req, bfree);
+
   ret =
-      g_dbus_proxy_call_sync(proxy, "BindShortcuts",
+      g_dbus_proxy_call_sync(proxy, req->method,
                              g_variant_new("(oa(sa{sv})sa{sv})", session_handle,
                                            &shortcuts, "", &opts),
                              G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
 
   bfree(token);
+  bfree(handle);
 
   if (error != NULL) {
     g_assert(ret == NULL);

@@ -85,6 +85,40 @@ char *portal_handle_get_path(char *prefix, char *token) {
   return result;
 }
 
+void portal_request_callback(GDBusConnection *connection,
+                             const char *sender_name, const char *object_path,
+                             const char *interface_name,
+                             const char *signal_name, GVariant *parameters,
+                             gpointer user_data) {
+  request_call_t *req = user_data;
+
+  guint32 response;
+  g_autoptr(GVariant) result = NULL;
+
+  g_variant_get(parameters, "(u@a{sv})", &response, &result);
+
+  switch (response) {
+  case 0:
+    blog(LOG_INFO, "[%s(%s)] %s", PROJECT_PREFIX, req->method, req->message);
+    break;
+  case 1:
+    blog(LOG_WARNING, "[%s(%s)] request failed (user)", PROJECT_PREFIX,
+         req->method);
+    break;
+  case 2:
+    blog(LOG_WARNING, "[%s(%s)] request failed", PROJECT_PREFIX, req->method);
+    break;
+  }
+
+  g_dbus_connection_call(connection, BUS_NAME, object_path, REQUEST_INTERFACE,
+                         "Close", NULL, NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL,
+                         NULL, NULL);
+
+  bfree(req->method);
+  bfree(req->message);
+  g_dbus_connection_signal_unsubscribe(connection, req->signal_id);
+}
+
 bool portal_load() {
   if (!connection_init())
     return false;
