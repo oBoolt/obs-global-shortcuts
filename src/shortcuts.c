@@ -276,8 +276,10 @@ void shortcuts_unload() {
   g_dbus_connection_signal_unsubscribe(get_connection(),
                                        call->signal_shortcuts_id);
 
+  if (shortcuts_functions != NULL)
+    g_hash_table_unref(shortcuts_functions);
+
   g_object_unref(proxy);
-  g_hash_table_unref(shortcuts_functions);
   bfree(call);
   return;
 }
