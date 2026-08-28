@@ -214,6 +214,31 @@ bool shortcuts_load() {
           .description = obs_module_text("BindPlayPauseRecording"),
           .exec = bind_play_pause_recording,
       },
+      {
+          .id = "splitRecordingFile",
+          .description = obs_module_text("BindSplitRecordingFile"),
+          .exec = bind_split_recording_file,
+      },
+      {
+          .id = "addChapter",
+          .description = obs_module_text("BindAddChapter"),
+          .exec = bind_add_chapter,
+      },
+      {
+          .id = "toggleReplayBuffer",
+          .description = obs_module_text("BindToggleReplayBuffer"),
+          .exec = bind_toggle_replay_buffer,
+      },
+      {
+          .id = "saveReplayBuffer",
+          .description = obs_module_text("BindSaveReplayBuffer"),
+          .exec = bind_save_replay_buffer,
+      },
+      {
+          .id = "toggleVirtualCamera",
+          .description = obs_module_text("BindToggleVirtualCamera"),
+          .exec = bind_toggle_virtual_camera,
+      },
       SHORTCUT_NULL,
   };
 
