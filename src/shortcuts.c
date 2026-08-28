@@ -19,6 +19,7 @@ static GHashTable *shortcuts_functions = NULL;
 typedef struct shortcuts_call {
   char *session_token;
   guint signal_shortcuts_id;
+  bool has_session;
 } shortcuts_call_t;
 
 static shortcuts_call_t *call;
@@ -75,6 +76,7 @@ static bool shortcuts_register_app() {
 static void shortcuts_call_init() {
   call = bzalloc(sizeof(shortcuts_call_t));
 
+  call->has_session = false;
   portal_handle_new(NULL, &call->session_token);
 }
 
@@ -108,6 +110,7 @@ static bool shortcuts_create_session() {
     return false;
   }
 
+  call->has_session = true;
   blog(LOG_DEBUG, "[%s] GlobalShortcuts session created", PROJECT_PREFIX);
 
   return true;
@@ -249,7 +252,7 @@ bool shortcuts_load() {
 
 void shortcuts_unload() {
   GDBusConnection *connection = get_connection();
-  if (connection != NULL) {
+  if (connection != NULL && call->has_session) {
     g_autoptr(GError) error = NULL;
     g_autoptr(GVariant) ret = NULL;
 
