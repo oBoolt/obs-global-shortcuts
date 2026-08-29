@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.4.2)
-project(global-shortcuts-portal)
+project(obs-global-shortcuts)
 
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)

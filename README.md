@@ -1,1 +1,1 @@
-# OBS Studio Global shortcuts portal
+# OBS GlobalShortcuts
