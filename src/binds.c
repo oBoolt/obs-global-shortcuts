@@ -69,3 +69,18 @@ void bind_toggle_virtual_camera() {
 
   blog(LOG_DEBUG, "[%s] virtual camera state changed", PROJECT_PREFIX);
 }
+
+void bind_toggle_preview() {
+  // Only valid if studio mode is disabled
+  if (obs_frontend_preview_program_mode_active())
+    return;
+
+  obs_frontend_set_preview_enabled(!obs_frontend_preview_enabled());
+  blog(LOG_DEBUG, "[%s] preview mode state changed", PROJECT_PREFIX);
+}
+
+void bind_toggle_studio_mode() {
+  obs_frontend_set_preview_program_mode(
+      !obs_frontend_preview_program_mode_active());
+  blog(LOG_DEBUG, "[%s] studio mode state changed", PROJECT_PREFIX);
+}

@@ -258,6 +258,16 @@ bool shortcuts_load() {
           .description = obs_module_text("BindToggleVirtualCamera"),
           .exec = bind_toggle_virtual_camera,
       },
+      {
+          .id = "togglePreview",
+          .description = obs_module_text("BindTogglePreview"),
+          .exec = bind_toggle_preview,
+      },
+      {
+          .id = "toggleStudioMode",
+          .description = obs_module_text("BindToggleStudioMode"),
+          .exec = bind_toggle_studio_mode,
+      },
       SHORTCUT_NULL,
   };
 
