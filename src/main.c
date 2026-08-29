@@ -8,7 +8,7 @@
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE("obs-global-shortcuts", "en-US")
 
-const char *obs_module_name() { return "GlobalShortcuts Portal"; }
+const char *obs_module_name() { return "GlobalShortcuts"; }
 const char *obs_module_description() { return obs_module_text("Description"); }
 
 bool obs_module_load(void) {
