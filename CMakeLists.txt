@@ -28,7 +28,7 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES PREFIX "")
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(LIB_OUT_DIR "/lib/obs-plugins")
-    set(DATA_OUT_DIR "/share/obs/obs-plugins/${CMAKE_PROJECT_NAME}")
+    set(DATA_OUT_DIR "/usr/share/obs/obs-plugins/${CMAKE_PROJECT_NAME}")
 else()
     set(LIB_OUT_DIR "${CMAKE_PROJECT_NAME}/bin/64bit")
     set(DATA_OUT_DIR "${CMAKE_PROJECT_NAME}/data")
