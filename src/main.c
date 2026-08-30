@@ -6,7 +6,7 @@
 #include "shortcuts.h"
 
 OBS_DECLARE_MODULE()
-OBS_MODULE_USE_DEFAULT_LOCALE("obs-global-shortcuts", "en-US")
+OBS_MODULE_USE_DEFAULT_LOCALE("linux-global-shortcuts", "en-US")
 
 const char *obs_module_name() { return "GlobalShortcuts"; }
 const char *obs_module_description() { return obs_module_text("Description"); }
