@@ -8,7 +8,7 @@ This plugin aims to register OBS hotkeys in the xdg-desktop-portal for global us
 Open OBS Studio, which will automatically register the shortcuts, then use the native way of your desktop environment to display and set the keybinds. See [guides](#guides)
 
 ### Requirements
-- OBS Studio 32.2 or later
+- OBS Studio 32.0 or later
 - An xdg-desktop-portal backend supporting GlobalShortcuts
 
 ### Build Dependencies
