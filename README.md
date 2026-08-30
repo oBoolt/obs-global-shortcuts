@@ -1,6 +1,9 @@
 # Global shortcuts for OBS Studio using xdg-desktop-portal
 This plugin aims to register OBS hotkeys in the xdg-desktop-portal for global usage mainly in linux using wayland
 
+> [!IMPORTANT]
+> This is not an official OBS Studio repository/plugin
+
 ### Requirements
 - OBS Studio 32.2 or later
 - An xdg-desktop-portal backend supporting GlobalShortcuts
