@@ -42,9 +42,9 @@ for more information go to [here](https://wiki.hypr.land/0.56.0/Configuring/Basi
 </details>
 
 ### Roadmap
-- [] Finish implementing all [static keybinds](difference-between-static-keybinds-and-dynamic-keybinds)
-- [] Add [dynamic keybinds](difference-between-static-keybinds-and-dynamic-keybinds) support
-- [] Translate to pt-BR
+- [ ] Finish implementing all [static keybinds](#difference-between-static-keybinds-and-dynamic-keybinds)
+- [ ] Add [dynamic keybinds](#difference-between-static-keybinds-and-dynamic-keybinds) support
+- [ ] Translate to pt-BR
 
 ### Other
 #### Difference between _Static Keybinds_ and _Dynamic Keybinds_
