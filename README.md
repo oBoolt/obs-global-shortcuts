@@ -8,7 +8,7 @@ This plugin aims to register OBS hotkeys in the xdg-desktop-portal for global us
 Open OBS Studio, which will automatically register the shortcuts, then use the native way of your desktop environment to display and set the keybinds. See [guides](#guides)
 
 ### Requirements
-- OBS Studio 32.2 or later
+- OBS Studio 32.0 or later
 - An xdg-desktop-portal backend supporting GlobalShortcuts
 
 ### Build Dependencies
@@ -52,4 +52,4 @@ for more information go to [here](https://wiki.hypr.land/0.56.0/Configuring/Basi
 ### Other
 #### Difference between _Static Keybinds_ and _Dynamic Keybinds_
 In this project I am calling "static keybinds" all hotkeys that are default in OBS Studio, meanwhile "dynamic keybinds" are the ones related to
-Sources, Outputs and Scenes, which are dynamically created as new sources, outputs and scenes are created.
+Sources and Scenes, which are dynamically created as new sources and scenes are created.
